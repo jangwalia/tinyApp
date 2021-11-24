@@ -1,3 +1,4 @@
+//creating express server
 const express = require("express");
 const app = express();
 const path = require('path');
@@ -9,7 +10,7 @@ const urlDatabase = {
 };
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'/views'));
-
+//#######  DIFFERENT ROUTES  #############
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
