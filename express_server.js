@@ -9,15 +9,22 @@ const urlDatabase = {
 };
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'/views'));
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+
+
 app.get("/urls",(req,res)=>{
   res.render('urls_index',{urls : urlDatabase});
 })
+
+app.get('/urls/:shortURL',(req,res)=>{
+  const{shortURL} = req.params;
+  const longurl = urlDatabase[shortURL];
+  res.render('urls_show',{shortURL,longurl});
+})
+
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
