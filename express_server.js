@@ -58,11 +58,21 @@ app.get('/urls/:shortURL',(req,res)=>{
 // fetch long url route
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+  if(shortURL in urlDatabase){
   const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
+  }
+  else{
+    res.send("Page Not Found, Error 404");
+  }
 });
 
-
+// Delete Route
+app.post('/urls/:shortURL/delete',(req,res)=>{
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');
+})
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
