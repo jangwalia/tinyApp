@@ -4,6 +4,7 @@ const app = express();
 const path = require('path');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
+const { url } = require("inspector");
 app.use(bodyParser.urlencoded({extended: true}));
 
 //Generate random string
@@ -24,11 +25,14 @@ const urlDatabase = {
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'/views'));
 //#######  DIFFERENT ROUTES  #############
+
+
+//Home Page route
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-
+//show all urls route
 app.get("/urls",(req,res)=>{
   res.render('urls_index',{urls : urlDatabase});
 })
@@ -37,24 +41,26 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-//######### POST REQUEST FROM THE FORM
- app.post('/urls',(req,res)=>{
-  const {longURL} = req.body;
-  const newCode = generateRandomString();
-  urlDatabase[newCode] = longURL;
-  res.redirect('/urls');
- })
-
+//show individual url route
 app.get('/urls/:shortURL',(req,res)=>{
-  const{shortURL} = req.params;
+  const shortURL = req.params.shortURL;
   const longurl = urlDatabase[shortURL];
   res.render('urls_show',{shortURL,longurl});
 })
+//######### POST REQUEST FROM THE FORM
+ app.post('/urls',(req,res)=>{
+  const{longURL} = req.body;
+  const newCode = generateRandomString();
+  urlDatabase[newCode] = longURL;
+  res.redirect(`/urls/${newCode}`);
+ })
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+// fetch long url route
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
 });
-
 
 
 app.listen(PORT, () => {
