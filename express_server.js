@@ -17,6 +17,7 @@ function generateRandomString() {
   }return code;
   
 }
+
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -29,6 +30,7 @@ const users = {
     password: "dishwasher-funk"
   }
 }
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
