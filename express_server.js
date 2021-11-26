@@ -30,6 +30,18 @@ const users = {
     password: "dishwasher-funk"
   }
 }
+//checking email already exists in users
+function checkemail(email){
+  for(const check in users){
+   for(const val in users[check]){
+     if(users[check][val] === email){
+       return true;
+     }
+   }
+  }  return false;
+}
+
+
 
 
 const urlDatabase = {
@@ -50,7 +62,6 @@ app.get("/", (req, res) => {
 app.get("/urls",(req,res)=>{
   const id = req.cookies.id;
   const user = users[id];
-  console.log('this is id',user);
   const tempVariable = {
     urls : urlDatabase,
     username : req.cookies.name,
@@ -125,17 +136,27 @@ app.get('/register',(req,res)=>{
 //post request from register to update user object
 app.post('/register',(req,res)=>{
   const{email,password} = req.body;
-  const user_id = generateRandomString();
-  const user = {
-    id : user_id,
-    email : email,
-    password : password
+  if(!email || !password){
+    throw new Error('Error 400..Please enter valid email and password')
   }
-  users[user_id] = user
-  res.cookie('id',user_id);
-  res.redirect('/urls');
-  console.log(users);
-})
+  else if(!checkemail(email)){
+    const user_id = generateRandomString();
+    const user = {
+      id : user_id,
+      email : email,
+      password : password
+    }
+    users[user_id] = user
+    res.cookie('id',user_id);
+    res.redirect('/urls');
+    console.log(users);
+    
+  }
+  else{
+    throw new Error('Email already exist');
+  }
+});
+  
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
