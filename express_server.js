@@ -17,7 +17,18 @@ function generateRandomString() {
   }return code;
   
 }
-
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -35,9 +46,13 @@ app.get("/", (req, res) => {
 
 //show all urls route
 app.get("/urls",(req,res)=>{
+  const id = req.cookies.id;
+  const user = users[id];
+  console.log('this is id',user);
   const tempVariable = {
     urls : urlDatabase,
-    username : req.cookies.name 
+    username : req.cookies.name,
+    user : user 
   }
   res.render('urls_index',tempVariable);
 })
@@ -96,10 +111,29 @@ app.post('/login',(req,res)=>{
 })
 // LOGOUT Route
 app.post('/logout',(req,res)=>{
-  res.clearCookie('name');
+  res.clearCookie('id');
   res.redirect('/urls');
 })
+//Register Route to show register form
 
+app.get('/register',(req,res)=>{
+  res.render('register');
+})
+
+//post request from register to update user object
+app.post('/register',(req,res)=>{
+  const{email,password} = req.body;
+  const user_id = generateRandomString();
+  const user = {
+    id : user_id,
+    email : email,
+    password : password
+  }
+  users[user_id] = user
+  res.cookie('id',user_id);
+  res.redirect('/urls');
+  console.log(users);
+})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
