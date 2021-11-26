@@ -5,8 +5,9 @@ const path = require('path');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const { url } = require("inspector");
+const cookieParser = require("cookie-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(cookieParser());
 //Generate random string
 function generateRandomString() {
   let code = "";
@@ -34,18 +35,24 @@ app.get("/", (req, res) => {
 
 //show all urls route
 app.get("/urls",(req,res)=>{
-  res.render('urls_index',{urls : urlDatabase});
+  const tempVariable = {
+    urls : urlDatabase,
+    username : req.cookies.name 
+  }
+  res.render('urls_index',tempVariable);
 })
 //###### GET REQUEST TO SHOW THE FORM
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+ const username = req.cookies.name 
+  res.render("urls_new",{username});
 });
 
 //show individual url route
 app.get('/urls/:shortURL',(req,res)=>{
   const shortURL = req.params.shortURL;
   const longurl = urlDatabase[shortURL];
-  res.render('urls_show',{shortURL,longurl});
+  const username = req.cookies.name ;
+  res.render('urls_show',{shortURL,longurl,username});
 })
 //######### POST REQUEST FROM THE FORM
  app.post('/urls',(req,res)=>{
@@ -78,6 +85,18 @@ app.post('/urls/:id',(req,res)=>{
   const id = req.params.id;
   const longURL = req.body.newURL
   urlDatabase[id] = longURL;
+  res.redirect('/urls');
+})
+//Log IN Route
+
+app.post('/login',(req,res)=>{
+  const username = req.body.username;
+  res.cookie('name',username);
+  res.redirect('/urls');
+})
+// LOGOUT Route
+app.post('/logout',(req,res)=>{
+  res.clearCookie('name');
   res.redirect('/urls');
 })
 
