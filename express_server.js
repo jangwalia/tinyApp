@@ -117,10 +117,27 @@ app.post('/urls/:id',(req,res)=>{
 })
 //Log IN Route
 
+app.get('/login',(req,res)=>{
+  const tempVariable = {user : users}
+  res.render('login',tempVariable);
+})
+//POST route for log in page
 app.post('/login',(req,res)=>{
-  const username = req.body.username;
-  res.cookie('name',username);
-  res.redirect('/urls');
+  const{email,password} = req.body;
+  let user_id = "";
+  for(const user in users){
+    for(const key in users[user]){
+      if(users[user]['email'] === email && users[user]['password'] === password){
+        user_id = users[user].id;
+        res.cookie('id',user_id);
+        res.redirect('/urls');
+      }
+      }
+      }
+        throw new Error('Error 403...you dont have an account with us...')
+      
+      
+  
 })
 // LOGOUT Route
 app.post('/logout',(req,res)=>{
@@ -130,7 +147,8 @@ app.post('/logout',(req,res)=>{
 //Register Route to show register form
 
 app.get('/register',(req,res)=>{
-  res.render('register');
+  const tempVariable = {user : users}
+  res.render('register',tempVariable);
 })
 
 //post request from register to update user object
@@ -149,7 +167,7 @@ app.post('/register',(req,res)=>{
     users[user_id] = user
     res.cookie('id',user_id);
     res.redirect('/urls');
-    console.log(users);
+    
     
   }
   else{

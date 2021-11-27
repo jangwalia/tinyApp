@@ -10,20 +10,19 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-  </nav>
-    <% if(user) {%>
-    <h2>Hello <%= user.email %></h2>
-    <form action="/logout" method = "POST">
-     <button type="submit" class="btn btn-warning">Log out</button>
+   
+    <form action="/login" method = "GET">
+      
+      <button type="submit" class="btn btn-primary mt-4">Log In</button>
     
     </form>
-  <% }else{ %>
-
-  <form action="/login" method = "POST">
-    <label for="name">Enter Your Username</label>
-    <input type="text" name = "username" id = "name">
-    <button type="submit" class="btn btn-primary">Log In</button>
-  
-  </form>
-<% } %>
+    <form action="/register" method = "GET">
+      
+      <button type="submit" class="btn btn-success mt-4">Register</button>
+    
+    </form>
+    
+ 
+  </nav>
+    
 </header>
