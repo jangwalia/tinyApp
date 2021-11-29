@@ -6,6 +6,8 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const { url } = require("inspector");
 const cookieParser = require("cookie-parser");
+const { constants } = require("buffer");
+const { log } = require("util");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 //Generate random string
@@ -31,16 +33,13 @@ const users = {
   }
 }
 //checking email already exists in users
-function checkemail(email){
-  for(const check in users){
-   for(const val in users[check]){
-     if(users[check][val] === email){
+function checkemail(email,database){
+  for(const check in database){
+   if(database[check]['email'] === email){
        return true;
      }
-   }
-  }  return false;
+   }  return false;
 }
-
 
 
 
@@ -52,7 +51,6 @@ app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'/views'));
 //#######  DIFFERENT ROUTES  #############
 
-
 //Home Page route
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -60,27 +58,38 @@ app.get("/", (req, res) => {
 
 //show all urls route
 app.get("/urls",(req,res)=>{
-  const id = req.cookies.id;
-  const user = users[id];
+  const {id} = req.cookies;
+  const user = users[id]
   const tempVariable = {
-    urls : urlDatabase,
-    username : req.cookies.name,
-    user : user 
-  }
+   urls : urlDatabase,
+   user,
+}
   res.render('urls_index',tempVariable);
 })
 //###### GET REQUEST TO SHOW THE FORM
 app.get("/urls/new", (req, res) => {
- const username = req.cookies.name 
-  res.render("urls_new",{username});
+  const {id} = req.cookies;
+  const user = users[id]
+  const tempVariable = {
+   urls : urlDatabase,
+   user,
+}
+ res.render("urls_new",tempVariable);
 });
 
 //show individual url route
 app.get('/urls/:shortURL',(req,res)=>{
   const shortURL = req.params.shortURL;
   const longurl = urlDatabase[shortURL];
-  const username = req.cookies.name ;
-  res.render('urls_show',{shortURL,longurl,username});
+  const {id} = req.cookies;
+  const user = users[id];
+  const tempVariable = {
+   urls : urlDatabase,
+   user,
+   longurl,
+   shortURL
+}
+  res.render('urls_show',tempVariable);
 })
 //######### POST REQUEST FROM THE FORM
  app.post('/urls',(req,res)=>{
@@ -117,31 +126,59 @@ app.post('/urls/:id',(req,res)=>{
 })
 //Log IN Route
 
+app.get('/login',(req,res)=>{
+  const {id} = req.cookies;
+  const user = users[id]
+  const tempVariable = {
+   urls : urlDatabase,
+   user,
+}
+ res.render('login',tempVariable);
+})
+//POST route for log in page
 app.post('/login',(req,res)=>{
-  const username = req.body.username;
-  res.cookie('name',username);
-  res.redirect('/urls');
+  const{email,password} = req.body;
+    if(checkemail(email,users)){
+      for(const pwd in users){
+        if(users[pwd]['password'] === password){
+          const id = users[pwd]['id'];
+          res.cookie('id',id);
+          res.redirect('/urls');
+        }
+      }
+  }else{
+    res.status(403).send("Email or password does not match..");
+  }
 })
 // LOGOUT Route
 app.post('/logout',(req,res)=>{
   res.clearCookie('id');
   res.redirect('/urls');
+  
 })
+
+
 //Register Route to show register form
 
 app.get('/register',(req,res)=>{
-  res.render('register');
+  const {id} = req.cookies;
+  const user = users[id]
+  const tempVariable = {
+   urls : urlDatabase,
+   user,
+}
+  res.render('register',tempVariable);
 })
 
 //post request from register to update user object
 app.post('/register',(req,res)=>{
   const{email,password} = req.body;
   if(!email || !password){
-    throw new Error('Error 400..Please enter valid email and password')
+    res.status(400).send("Enter email and password..");
   }
-  else if(!checkemail(email)){
-    const user_id = generateRandomString();
-    const user = {
+  else if(!checkemail(email,users)){
+      const user_id = generateRandomString();
+      const user = {
       id : user_id,
       email : email,
       password : password
@@ -149,11 +186,11 @@ app.post('/register',(req,res)=>{
     users[user_id] = user
     res.cookie('id',user_id);
     res.redirect('/urls');
-    console.log(users);
+    
     
   }
   else{
-    throw new Error('Email already exist');
+    res.status(400).send("Email already exists..");
   }
 });
   
