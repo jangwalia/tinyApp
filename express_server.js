@@ -8,6 +8,7 @@ const { url } = require("inspector");
 const cookieParser = require("cookie-parser");
 const { constants } = require("buffer");
 const { log } = require("util");
+const bcrypt = require('bcrypt');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 //Generate random string
@@ -21,16 +22,7 @@ function generateRandomString() {
 }
 
 const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  }
+  
 }
 //checking email already exists in users
 function checkemail(email,database){
@@ -180,10 +172,12 @@ app.get('/login',(req,res)=>{
 })
 //POST route for log in page
 app.post('/login',(req,res)=>{
-  const{email,password} = req.body;
-    if(checkemail(email,users)){
+  const email = req.body.email;
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  if(checkemail(email,users)){
       for(const pwd in users){
-        if(users[pwd]['password'] === password){
+       if(bcrypt.compareSync(password, hashedPassword)){
           const id = users[pwd]['id'];
           res.cookie('id',id);
           res.redirect('/urls');
@@ -215,7 +209,10 @@ app.get('/register',(req,res)=>{
 
 //post request from register to update user object
 app.post('/register',(req,res)=>{
-  const{email,password} = req.body;
+  const email = req.body.email;
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  console.log(hashedPassword);
   if(!email || !password){
     res.status(400).send("Enter email and password..");
   }
@@ -223,8 +220,8 @@ app.post('/register',(req,res)=>{
       const user_id = generateRandomString();
       const user = {
       id : user_id,
-      email : email,
-      password : password
+      email,
+      password
     }
     users[user_id] = user
     res.cookie('id',user_id);
