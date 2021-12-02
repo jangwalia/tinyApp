@@ -5,12 +5,21 @@ const path = require('path');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const { url } = require("inspector");
-const cookieParser = require("cookie-parser");
+//const cookieParser = require("cookie-parser");
+const cookieSession = require('cookie-session')
 const { constants } = require("buffer");
 const { log } = require("util");
 const bcrypt = require('bcrypt');
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+//app.use(cookieParser());
+//using sessions to secure cookies
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 //Generate random string
 function generateRandomString() {
   let code = "";
@@ -58,11 +67,10 @@ app.get("/", (req, res) => {
 //show all urls route
 app.get("/urls",(req,res)=>{
   let result = {};
-  const {id} = req.cookies;
-  const user = users[id];
+  const user = users[req.session.user_id];
   //to check if only currently logged user can access his created URLS
   for(const url in urlDatabase){
-   if(urlDatabase[url].userID === id){
+   if(urlDatabase[url].userID === req.session.user_id){
     result[url] =  urlDatabase[url]
    }
   }
@@ -74,9 +82,8 @@ app.get("/urls",(req,res)=>{
 });
 //###### GET REQUEST TO SHOW THE FORM
 app.get("/urls/new", (req, res) => {
-  const {id} = req.cookies;
-  const user = users[id]
-  if(id){
+  const user = users[req.session.user_id]
+  if(req.session.user_id){
   const tempVariable = {
    urls : urlDatabase,
    user,
@@ -91,8 +98,7 @@ app.get("/urls/new", (req, res) => {
 app.get('/urls/:shortURL',(req,res)=>{
   const shortURL = req.params.shortURL;
   const longurl = urlDatabase[shortURL]['longURL'];
-  const {id} = req.cookies;
-  const user = users[id];
+  const user = users[req.session.user_id];
   const tempVariable = {
    user,
    longurl,
@@ -102,12 +108,11 @@ app.get('/urls/:shortURL',(req,res)=>{
 })
 //######### POST REQUEST FROM THE FORM
  app.post('/urls',(req,res)=>{
-  const {id} = req.cookies;
   const{longURL} = req.body;
   const shortURL = generateRandomString();
   const data = {
     longURL,
-    userID : id
+    userID : req.session.user_id
   }
   urlDatabase[shortURL] = data;
  
@@ -129,7 +134,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Delete Route
 app.post('/urls/:shortURL/delete',(req,res)=>{
-  const userid = req.cookies.id;
+  const userid = req.session.user_id;
   let currentUser = "";
   const {shortURL} = req.params;
   //only the current logged user can delete their urls
@@ -145,7 +150,7 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
 //UPDATE Route
  app.post('/urls/:id',(req,res)=>{
   let currentUser = "";
-  const userid = req.cookies.id;
+  const userid = req.session.user_id;
   const id = req.params.id;
   //To check that only logged user can edit their urls
   for(const user in urlDatabase){
@@ -162,8 +167,8 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
 //Log IN Route
 
 app.get('/login',(req,res)=>{
-  const {id} = req.cookies;
-  const user = users[id]
+  
+  const user = users[req.session.user_id]
   const tempVariable = {
    urls : urlDatabase,
    user,
@@ -179,7 +184,7 @@ app.post('/login',(req,res)=>{
       for(const pwd in users){
        if(bcrypt.compareSync(password, hashedPassword)){
           const id = users[pwd]['id'];
-          res.cookie('id',id);
+          req.session.user_id  = id
           res.redirect('/urls');
         }
       }
@@ -189,7 +194,7 @@ app.post('/login',(req,res)=>{
 })
 // LOGOUT Route
 app.post('/logout',(req,res)=>{
-  res.clearCookie('id');
+  req.session = null
   res.redirect('/urls');
   
 })
@@ -198,8 +203,7 @@ app.post('/logout',(req,res)=>{
 //Register Route to show register form
 
 app.get('/register',(req,res)=>{
-  const {id} = req.cookies;
-  const user = users[id]
+  const user = users[req.session.user_id]
   const tempVariable = {
    urls : urlDatabase,
    user,
@@ -224,7 +228,8 @@ app.post('/register',(req,res)=>{
       password
     }
     users[user_id] = user
-    res.cookie('id',user_id);
+    req.session.user_id = user_id;
+    //res.cookie('id',user_id);
     res.redirect('/urls');
     
     
