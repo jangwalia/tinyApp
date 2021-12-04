@@ -4,43 +4,32 @@ const app = express();
 const path = require('path');
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const { url } = require("inspector");
 //const cookieParser = require("cookie-parser");
 const cookieSession = require('cookie-session')
-const { constants } = require("buffer");
-const { log } = require("util");
 const bcrypt = require('bcrypt');
+const {getuserByemail,generateRandomString} = require('./helper');
 app.use(bodyParser.urlencoded({extended: true}));
 //app.use(cookieParser());
 //using sessions to secure cookies
 app.use(cookieSession({
   name: 'session',
-  keys: ['key1', 'key2'],
+  keys: ['secret'],
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 //Generate random string
-function generateRandomString() {
-  let code = "";
-  const characters = '012345678910abcdefghijklmnopqrstuvwxyz';
-  for(let i = 0;i <= 6 ;i ++){
-  code +=   characters.charAt(Math.floor(Math.random() * characters.length));
-  }return code;
-  
-}
+
 
 const users = { 
-  
+  randomid1 : {
+    id : 'randomid1',
+    email : "user1@yahoo.com",
+    password : '$2b$10$H6W2HMyE/68/9l/9ezglOOieKZHYo/DVd0HV3/DIv0p5uTaPk1TgS'
+  }
 }
 //checking email already exists in users
-function checkemail(email,database){
-  for(const check in database){
-   if(database[check]['email'] === email){
-       return true;
-     }
-   }  return false;
-}
+
 
 
 
@@ -56,7 +45,12 @@ app.set('views',path.join(__dirname,'/views'));
 
 //Home Page route
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const user = users[req.session.user_id];
+  const tempVariable = {
+    user,
+    urls : urlDatabase
+   }
+  res.render('homepage',tempVariable);
 });
 //function to get urls for user
 
@@ -179,23 +173,21 @@ app.get('/login',(req,res)=>{
 app.post('/login',(req,res)=>{
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  if(checkemail(email,users)){
-      for(const pwd in users){
-       if(bcrypt.compareSync(password, hashedPassword)){
-          const id = users[pwd]['id'];
-          req.session.user_id  = id
-          res.redirect('/urls');
-        }
-      }
-  }else{
-    res.status(403).send("Email or password does not match..");
+  const user = getuserByemail(email,users)
+  if (user === undefined || email !== user.email) {
+    return res.status(403).send('User details not found');
   }
+  if(bcrypt.compareSync(password,user.password)){
+        req.session.user_id  = user.id
+        return res.redirect('/urls');
+      }
+  res.status(403).send("Email or password does not match..");
+  
 })
 // LOGOUT Route
 app.post('/logout',(req,res)=>{
   req.session = null
-  res.redirect('/urls');
+  return res.redirect('/urls');
   
 })
 
@@ -216,11 +208,10 @@ app.post('/register',(req,res)=>{
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  console.log(hashedPassword);
   if(!email || !password){
     res.status(400).send("Enter email and password..");
   }
-  else if(!checkemail(email,users)){
+  else if(!getuserByemail(email,users)){
       const user_id = generateRandomString();
       const user = {
       id : user_id,
@@ -243,3 +234,5 @@ app.post('/register',(req,res)=>{
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+module.exports = {users};
