@@ -18,9 +18,8 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
-//Generate random string
 
-
+//sample users database
 const users = { 
   randomid1 : {
     id : 'randomid1',
@@ -28,15 +27,9 @@ const users = {
     password : '$2b$10$H6W2HMyE/68/9l/9ezglOOieKZHYo/DVd0HV3/DIv0p5uTaPk1TgS'
   }
 }
-//checking email already exists in users
-
-
-
+//sample url database
 
 const urlDatabase = {
-  // {shorturl : {longUrL :  'www.some.com' , userID : user1randomID }}
-  //{shorturl 2 :  {{longUrL :  'www.abc.com' , userID : user2randomID }}}
-  //{shorturl 3 :  {{longUrL :  'www.xyz.com' , userID : user2randomID }}}
   
 };
 app.set('view engine','ejs');
@@ -45,26 +38,20 @@ app.set('views',path.join(__dirname,'/views'));
 
 //Home Page route
 app.get("/", (req, res) => {
-  const user = users[req.session.user_id];
+  const user = users[req.session.id];
   const tempVariable = {
     user,
     urls : urlDatabase
    }
   res.render('homepage',tempVariable);
 });
-//function to get urls for user
-
-
-
-
-
-//show all urls route
+//index Route
 app.get("/urls",(req,res)=>{
   let result = {};
-  const user = users[req.session.user_id];
+  const user = users[req.session.id];
   //to check if only currently logged user can access his created URLS
   for(const url in urlDatabase){
-   if(urlDatabase[url].userID === req.session.user_id){
+   if(urlDatabase[url].userID === req.session.id){
     result[url] =  urlDatabase[url]
    }
   }
@@ -76,8 +63,8 @@ app.get("/urls",(req,res)=>{
 });
 //###### GET REQUEST TO SHOW THE FORM
 app.get("/urls/new", (req, res) => {
-  const user = users[req.session.user_id]
-  if(req.session.user_id){
+  const user = users[req.session.id]
+  if(req.session.id){
   const tempVariable = {
    urls : urlDatabase,
    user,
@@ -88,11 +75,18 @@ app.get("/urls/new", (req, res) => {
 }
 });
 
-//show individual url route
+//show  route
 app.get('/urls/:shortURL',(req,res)=>{
   const shortURL = req.params.shortURL;
-  const longurl = urlDatabase[shortURL]['longURL'];
-  const user = users[req.session.user_id];
+  if(!(shortURL in urlDatabase)){
+    return res.status(400).redirect('/login');
+  }
+  const longurl = urlDatabase[shortURL].longURL;
+  //logged out user can not access and edit the url
+  if(!req.session.id){
+   return res.status(400).redirect('/login');
+  }
+  const user = users[req.session.id];
   const tempVariable = {
    user,
    longurl,
@@ -106,7 +100,7 @@ app.get('/urls/:shortURL',(req,res)=>{
   const shortURL = generateRandomString();
   const data = {
     longURL,
-    userID : req.session.user_id
+    userID : req.session.id
   }
   urlDatabase[shortURL] = data;
  
@@ -128,7 +122,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Delete Route
 app.post('/urls/:shortURL/delete',(req,res)=>{
-  const userid = req.session.user_id;
+  const userid = req.session.id;
   let currentUser = "";
   const {shortURL} = req.params;
   //only the current logged user can delete their urls
@@ -144,7 +138,7 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
 //UPDATE Route
  app.post('/urls/:id',(req,res)=>{
   let currentUser = "";
-  const userid = req.session.user_id;
+  const userid = req.session.id;
   const id = req.params.id;
   //To check that only logged user can edit their urls
   for(const user in urlDatabase){
@@ -162,7 +156,7 @@ app.post('/urls/:shortURL/delete',(req,res)=>{
 
 app.get('/login',(req,res)=>{
   
-  const user = users[req.session.user_id]
+  const user = users[req.session.id]
   const tempVariable = {
    urls : urlDatabase,
    user,
@@ -178,7 +172,7 @@ app.post('/login',(req,res)=>{
     return res.status(403).send('User details not found');
   }
   if(bcrypt.compareSync(password,user.password)){
-        req.session.user_id  = user.id
+        req.session.id  = user.id
         return res.redirect('/urls');
       }
   res.status(403).send("Email or password does not match..");
@@ -208,26 +202,22 @@ app.post('/register',(req,res)=>{
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
+  const id = generateRandomString();
   if(!email || !password){
     res.status(400).send("Enter email and password..");
   }
-  else if(!getuserByemail(email,users)){
-      const user_id = generateRandomString();
-      const user = {
-      id : user_id,
+  else if(getuserByemail(email,users) !== undefined){
+    return res.status(403).send("email already exists");
+  }
+  const user = {
+      id,
       email,
-      password
+      password : hashedPassword
     }
-    users[user_id] = user
-    req.session.user_id = user_id;
+    users[id] = user
+    req.session.id = id;
     //res.cookie('id',user_id);
     res.redirect('/urls');
-    
-    
-  }
-  else{
-    res.status(400).send("Email already exists..");
-  }
 });
   
 
