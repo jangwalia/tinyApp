@@ -11,13 +11,13 @@
   <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longurl %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <h5 class="card-title">TinyURL for: <%= tempVariable.longurl %></h5>
+        <p class="card-text">Short URL: <a href="/u/<%= tempVariable.shortURL %>"><%= tempVariable.shortURL %></a></p>
       </div>
     <div class="card-footer text-muted"></div>
-    <form method ="POST" action="/urls/<%= shortURL  %> ">
+    <form method ="POST" action="/urls/<%= tempVariable.shortURL  %>?_method=PATCH">
       <label for="edit"> Edit The URL</label>
-      <input type = "text" id = "edit" value = <%= longurl %> name = "newURL">
+      <input type = "text" id = "edit" value = <%= tempVariable.longurl %> name = "newURL">
       <button type="submit" class="btn btn-outline-success">Submit</button>
     </form>
    

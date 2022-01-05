@@ -10,9 +10,9 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-      <% if(user){ %>
+      <% if(tempVariable.user){ %>
       <form action="/logout" method = "POST">
-        <span class = "lead">Logged As: <%= user.email%></span>    <button type="submit" class="btn btn-warning mt-4">Log Out</button>
+        <span class = "lead">Logged As: <%= tempVariable.user.email%></span>    <button type="submit" class="btn btn-warning mt-4">Log Out</button>
       
       </form>
     
