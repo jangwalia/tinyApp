@@ -9,15 +9,16 @@
 <body>
   <%- include ('partials/_header') %>
   <div class="card text-center">
+    <h2>New URL Created</h2>
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= tempVariable.longurl %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= tempVariable.shortURL %>"><%= tempVariable.shortURL %></a></p>
+        <h5 class="card-title">TinyURL for: <%= url.longURL %></h5>
+        <p class="card-text">Short URL: <a href="/u/<%= url.shortURL %>"><%= url.shortURL %></a></p>
       </div>
     <div class="card-footer text-muted"></div>
-    <form method ="POST" action="/urls/<%= tempVariable.shortURL  %>?_method=PATCH">
+    <form method ="POST" action="/urls/<%= url.shortURL  %>?_method=PUT">
       <label for="edit"> Edit The URL</label>
-      <input type = "text" id = "edit" value = <%= tempVariable.longurl %> name = "newURL">
+      <input type = "text" id = "edit" value = <%= url.longURL %> name = "newURL">
       <button type="submit" class="btn btn-outline-success">Submit</button>
     </form>
    

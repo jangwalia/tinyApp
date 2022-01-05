@@ -16,11 +16,15 @@ const getuserBYID = (database,id)=>{
  
 }
 const getUrl = (database,id)=>{
+  let result = {};
   for(const check in database){
     if(database[check].userID === id){
-      return database;
+      result[check] = {
+        longURL : database[check].longURL,
+        userID : database[check].userID
+      }
     }
-  }
+  }return result;
  
 }
 const generateRandomString = function() {
