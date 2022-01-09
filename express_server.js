@@ -8,8 +8,10 @@ const cookieSession = require('cookie-session')
 const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
 const { getuserByemail, generateRandomString, getUrl, getuserBYID } = require('./helper');
+const exp = require("constants");
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(express.static('public'));
 //app.use(cookieParser());
 //using sessions to secure cookies
 app.use(methodOverride('_method'));
@@ -55,7 +57,6 @@ app.get("/urls", (req, res) => {
   if (id) {
     const user = users[id];
     const checkUser = getUrl(urlDatabase, id);
-    console.log("this is current user---", user, "These are the urls of users: ", checkUser);
     const tempVariable = {
       user,
       urls: checkUser,
@@ -87,8 +88,10 @@ app.get("/urls/new", (req, res) => {
 app.post('/urls', (req, res) => {
   const id = req.session.id;
   const { longURL } = req.body;
+  if(!longURL){
+    return res.send("please enter valid long URL");
+  }
   const shortURL = generateRandomString();
-
   const data = {
 
     longURL,
@@ -96,7 +99,7 @@ app.post('/urls', (req, res) => {
   }
 
   urlDatabase[shortURL] = data;
-  res.redirect(`/urls/${shortURL}`);
+  return res.redirect(`/urls/${shortURL}`);
 })
 //show  route
 app.get('/urls/:shortURL', (req, res) => {
@@ -112,7 +115,7 @@ app.get('/urls/:shortURL', (req, res) => {
   const id = req.session.id;
   const user = users[id];
   const url = urlDatabase[shortURL];
-
+  url.shortURL = shortURL;
   const tempVariable = {
     user,
     url
@@ -225,7 +228,7 @@ app.post('/register', (req, res) => {
   users[id] = user
   req.session.id = id;
   //res.cookie('id',user_id);
-  return res.redirect('/login');
+  return res.redirect('/urls');
 });
 
 
