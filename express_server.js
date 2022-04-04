@@ -101,7 +101,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[shortURL] = data;
   return res.redirect(`/urls/${shortURL}`);
 })
-//show  route
+//show  route******
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   if (!(shortURL in urlDatabase)) {
